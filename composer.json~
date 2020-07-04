@@ -10,10 +10,5 @@
         }
     ],
     "minimum-stability": "dev",
-    "require": {},
-    "autoload": {
-        "psr-4": {
-            "src\\": "data/"
-        }
-    }
+    "require": {}
 }
