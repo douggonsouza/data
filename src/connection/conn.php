@@ -2,11 +2,6 @@
 
 namespace data\connection;
 
-define('DB_ORIGEM_HOST','');
-define('DB_ORIGEM_LOGIN','');
-define('DB_ORIGEM_SENHA','');
-define('DB_ORIGEM_SCHEMA','');
-
 abstract class conn
 {
 
@@ -16,18 +11,22 @@ abstract class conn
 	private function __construct(){	}
 	
 	/**
-	 * Acesso à conexão conn
-	 * 
-	 * @return
+	 * Conecta com o banco de dados
+	 *
+	 * @param string $host
+	 * @param string $login
+	 * @param string $password
+	 * @param string $schema
+	 * @return void
 	 */
-	static public function connection()
+	static public function connection(string $host, string $login, string $password, string $schema)
 	{
         if(!isset(self::$connection)){
 			self::$connection = mysqli_connect(
-				DB_ORIGEM_HOST,
-				DB_ORIGEM_LOGIN,
-				DB_ORIGEM_SENHA,
-				DB_ORIGEM_SCHEMA
+				$host,
+				$login,
+				$password,
+				$schema
 			) or die('Error connection database.');
 		}
 		return self::$connection;
