@@ -1,8 +1,11 @@
 <?php
 
-namespace Nuclear\system\model;
+namespace data\connection;
 
-use Nuclear\configs\cfg;
+define('DB_ORIGEM_HOST','');
+define('DB_ORIGEM_LOGIN','');
+define('DB_ORIGEM_SENHA','');
+define('DB_ORIGEM_SCHEMA','');
 
 abstract class conn
 {
@@ -20,14 +23,11 @@ abstract class conn
 	static public function connection()
 	{
         if(!isset(self::$connection)){
-            
-            $db = cfg::rescue('db');
-
 			self::$connection = mysqli_connect(
-				$db['DB_ORIGEM_HOST'],
-				$db['DB_ORIGEM_LOGIN'],
-				$db['DB_ORIGEM_SENHA'],
-				$db['DB_ORIGEM_SCHEMA']
+				DB_ORIGEM_HOST,
+				DB_ORIGEM_LOGIN,
+				DB_ORIGEM_SENHA,
+				DB_ORIGEM_SCHEMA
 			) or die('Error connection database.');
 		}
 		return self::$connection;
@@ -46,8 +46,7 @@ abstract class conn
 	 */ 
 	static public function getConnection()
 	{
-		self::connection();
-		return self::$connection;
+		return self::connection();
 	}
 
     /**

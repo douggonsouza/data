@@ -1,6 +1,6 @@
 <?php
 
-namespace Nuclear\system\model;
+namespace data\orm;
 
 /**
  * deprecated class
@@ -9,7 +9,6 @@ namespace Nuclear\system\model;
 
 abstract class orm
 {
-
     private $origem  = null;
     private $entity  = null;
     static  $conn    = null;
@@ -32,7 +31,6 @@ abstract class orm
             self::$model = $local;
     }
 
-    
     /**
      * Inicia transação
      * @return boolean
@@ -46,7 +44,6 @@ abstract class orm
         self::$conn->beginTransaction();
         return true;
     }
-    
 
     /**
      * Faz commit na transação iniciada
@@ -62,7 +59,6 @@ abstract class orm
         return true;
     }
     
-
     /**
      * Faz rollback na transação iniciada
      * @return boolean
@@ -76,7 +72,6 @@ abstract class orm
         self::$conn->setAttribute(\PDO::ATTR_AUTOCOMMIT, 1 );
         return true;
     }
-    
     
     /**
      * Expoe classe model

@@ -1,6 +1,6 @@
 <?php
 
-namespace Nuclear\system\model;
+namespace data\resource;
 
 class dicionary extends \stdClass
 {

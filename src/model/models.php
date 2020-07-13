@@ -1,14 +1,8 @@
 <?php
 
-namespace Nuclear\system\model;
+namespace data\model;
 
-use Nuclear\system\model\executes;
-use Nuclear\system\model\resources;
-use Nuclear\system\model\resourceInterface;
-use Nuclear\system\model\modelsInterface;
-use Nuclear\system\model\dicionary;
-
-class models extends executes implements resourceInterface, modelsInterface
+class models
 {  
     public    $table;
     public    $key;
