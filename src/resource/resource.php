@@ -3,8 +3,9 @@
 namespace data\resource;
 
 use data\connection\conn;
+use data\resource\resourceInterface;
 
-abstract class resource
+class resource implements resourceInterface
 {
     protected static $conn;
     protected static $data;
@@ -58,7 +59,7 @@ abstract class resource
      * 
      * @return array|null
      */
-    public static function asAllArray($type = self::MYSQLI_ASSOC)
+    public static function asAllArray($type = MYSQLI_ASSOC)
     {
         if(empty(self::getResource())){
             return null;
@@ -101,6 +102,51 @@ abstract class resource
         }
     }
 
+        /**
+     * Executa uma instruÃ§Ã£o MySQL
+     * 
+     */
+    public static function dicionary(string $sql)
+    {
+        if(!isset($sql) || empty($sql)){
+            return false;
+        }
+
+        self::conn();
+        if(!self::getConn()){
+            return false;
+        }
+        
+        try{
+            self::getConn()->query('SET SQL_SAFE_UPDATES = 0;');
+            self::setResource(self::getConn()->query((string) $sql));
+            if(empty(self::getResource())){
+                self::setError(self::getConn()->error);
+                return false;
+            }
+            self::getConn()->query('SET SQL_SAFE_UPDATES = 1;');
+            
+            return self::asAllArray();
+        }
+        catch(\Exception $e){
+            return false;
+        }
+    }
+
+    /**
+     * Atualiza a propriedade data
+     *
+     * @return bool
+     */
+    public static function data()
+    {
+        if(empty(self::getResource())){
+            return false;
+        }
+        self::setData(self::getResource()->fetch_object());
+        return true;
+    }
+
     /**
      * Move o ponteiro para o prÃ³ximo
      * 
@@ -128,7 +174,7 @@ abstract class resource
 
 
         self::setIndex(self::getIndex() - 1);
-        self::setData(self::getResource()->fetch_object());
+        self::data();
 
         return true;
     }
@@ -144,7 +190,7 @@ abstract class resource
         }
 
         self::setIndex(0);
-        self::setData(self::getResource()->fetch_object());
+        self::data();
 
         return true;
     }
@@ -160,7 +206,7 @@ abstract class resource
         }
 
         self::setIndex(self::totalRows() - 1);
-        self::setData(self::getResource()->fetch_object());
+        self::data();
 
         return true;
     }
@@ -207,6 +253,38 @@ abstract class resource
 
         self::$data = $data;
         self::setIsEof(false);
+    }
+
+    /**
+     * Get the value of data
+     */ 
+    public static function getField(string $field)
+    {
+        if(empty(self::getData()) || !isset($field) || empty($field)){
+            return '';
+        }
+        return self::$data->$field;
+    }
+
+    /**
+     * Preenche um campo com valor
+     *
+     * @param string $field
+     * @param mixed $value
+     * @return bool
+     */
+    public static function setField(string $field, $value)
+    {
+        if(!isset($field) || empty($field) || !isset($value) || empty($value)){
+            self::setError('Não é permitido nulo para os parâmentros Field ou Value.');
+            return false;
+        }
+        if(empty(self::getData())){
+            self::setError('Não encontrado o objeto Data');
+            return false;
+        }
+        self::$data->$field = $value;
+        return true;
     }
 
     /**

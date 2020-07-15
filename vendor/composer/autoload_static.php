@@ -22,10 +22,13 @@ class ComposerStaticInit5b5e257a38c3975347b6d4684547b97b
 
     public static $classMap = array (
         'data\\connection\\conn' => __DIR__ . '/../..' . '/src/connection/conn.php',
+        'data\\model\\model' => __DIR__ . '/../..' . '/src/model/model.php',
+        'data\\model\\modelInterface' => __DIR__ . '/../..' . '/src/model/modelInterface.php',
         'data\\model\\models' => __DIR__ . '/../..' . '/src/model/models.php',
         'data\\orm\\orm' => __DIR__ . '/../..' . '/src/orm/orm.php',
         'data\\resource\\dicionary' => __DIR__ . '/../..' . '/src/resource/dicionary.php',
         'data\\resource\\resource' => __DIR__ . '/../..' . '/src/resource/resource.php',
+        'data\\resource\\resourceInterface' => __DIR__ . '/../..' . '/src/resource/resourceInterface.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
