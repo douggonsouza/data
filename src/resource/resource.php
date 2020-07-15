@@ -244,7 +244,7 @@ class resource implements resourceInterface
      *
      * @return  self
      */ 
-    public static function setData($data)
+    protected static function setData($data)
     {
         if(!isset($data) && self::getIndex() >= self::totalRows()){
             self::setIsEof(true);
@@ -322,6 +322,7 @@ class resource implements resourceInterface
      */ 
     public static function setResource($resource)
     {
+        self::$resource = null;
         if(isset($resource) && !empty($resource) && $resource != false){
             self::$resource = $resource;
         }

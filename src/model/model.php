@@ -10,7 +10,10 @@ class model implements modelInterface
     public $table;
     public $key;
     public $isNew;
+    public $dicionary = null;
     protected $rows;
+    protected $error;
+
 
     public function __construct(string $table, string $key)
     {
@@ -28,7 +31,17 @@ class model implements modelInterface
      */
     public function dicionary()
     {
-        return data\resource\resource::dicionary('SELECT * FROM '.$this->getTable().';');
+        if(empty($this->getDicionary())){
+            return null;
+        }
+
+        $resource = new resource();
+        $dicionary = $resource::dicionary($this->getDicionary());
+        if(!$dicionary){
+            $this->setError($resource::getError());
+            return null;
+        }
+        return $dicionary;
     }
 
     /**
@@ -50,21 +63,24 @@ class model implements modelInterface
         }
 
         if(!isset($fieldOrigem)){
-            $fieldOrigem = $this->getKey();
+            $fieldOrigem = $fieldDestine;
         }
 
         $resource = new resource();
 
         $sql = sprintf("SELECT
-                %1\$s.*
+                %3\$s.*
             FROM %1\$s
             JOIN %3\$s ON %3\$s.%4\$s = %1\$s.%2\$s
+            WHERE
+                %1\$s.%2\$s = %5\$s
             ORDER BY
                 %1\$s.%2\$s;",
             $this->getTable(),
             $fieldOrigem,
             $model->getTable(),
-            $fieldDestine
+            $fieldDestine,
+            $this->getField($fieldOrigem)
         );
 
         if(!$resource::query($sql)){
@@ -72,7 +88,50 @@ class model implements modelInterface
         }
 
         return $resource;
-    } 
+    }
+    
+    /**
+     * Cardinalidade Muitos para Muitos
+     *
+     * @param object $model
+     * @param string $fieldDestine
+     * @param string $fieldOrigen
+     * @return void
+     */
+    public function manyForMany(object $model, string $fieldDestine, string $fieldOrigen = null)
+    {
+        if(!isset($model) && empty($model)){
+            return null;
+        }
+
+        if(!isset($fieldDestine) && empty($fieldDestine)){
+            return null;
+        }
+
+        if(!isset($fieldOrigem)){
+            $fieldOrigem = $fieldDestine;
+        }
+
+        $resource = new resource();
+
+        $sql = sprintf("SELECT
+                %3\$s.*
+            FROM %1\$s
+            JOIN %3\$s ON %3\$s.%4\$s = %1\$s.%2\$s
+            ORDER BY
+                %1\$s.%2\$s;",
+            $this->getTable(),
+            $fieldOrigem,
+            $model->getTable(),
+            $fieldDestine,
+        );
+
+        if(!$resource::query($sql)){
+            return null;
+        }
+
+        return $resource;
+    }
 
     /**
      * Carrega a propriedade rows com um resource
@@ -155,5 +214,102 @@ class model implements modelInterface
     public function getRows()
     {
         return $this->rows;
+    }
+
+        /**
+     * Expõe o valor do campo
+     *
+     * @param string $field
+     * @return void
+     */ 
+    public function getData()
+    {
+        if(empty($this->getRows())){
+            return null;
+        }
+
+        return $this->getRows()::getData();
+    }
+
+    /**
+     * Expõe o valor do campo
+     *
+     * @param string $field
+     * @return void
+     */ 
+    public function getField(string $field)
+    {
+        if(empty($this->getRows())){
+            return null;
+        }
+
+        if(!isset($field) || empty($field)){
+            return null;
+        }
+
+        return $this->getRows()::getField($field);
+    }
+
+    /**
+     * Atualiza o valor para o campo
+     *
+     * @param string $field
+     * @param mixed $value
+     * @return bool
+     */ 
+    public function setField(string $field, $value)
+    {
+        if(empty($this->getRows())){
+            return null;
+        }
+
+        if(!isset($field) || empty($field)){
+            return null;
+        }
+
+        return $this->getRows()::setField($field, $value);
+    }
+
+    /**
+     * Get the value of dicionary
+     */ 
+    public function getDicionary()
+    {
+        return $this->dicionary;
+    }
+
+    /**
+     * Set the value of dicionary
+     *
+     * @return  self
+     */ 
+    protected function setDicionary($dicionary)
+    {
+        if(isset($dicionary) && !empty($dicionary)){
+            $this->dicionary = $dicionary;
+        }
+        
+        return $this;
+    }
+
+    /**
+     * Get the value of error
+     */ 
+    public function getError()
+    {
+        return $this->error;
+    }
+
+    /**
+     * Set the value of error
+     *
+     * @return  self
+     */ 
+    public function setError($error)
+    {
+        if(isset($error) && !empty($error)){
+            $this->error = $error;
+        }
+        return $this;
     }
 }
