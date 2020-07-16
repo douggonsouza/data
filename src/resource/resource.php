@@ -143,7 +143,7 @@ class resource implements resourceInterface
         if(empty(self::getResource())){
             return false;
         }
-        self::setData(self::getResource()->fetch_object());
+        self::setData(self::getResource()->fetch_assoc());
         return true;
     }
 
@@ -158,7 +158,7 @@ class resource implements resourceInterface
         }
 
         self::setIndex(self::getIndex() + 1);
-        self::setData(self::getResource()->fetch_object());
+        self::setData(self::getResource()->fetch_assoc());
         return true;
     }
 
@@ -236,6 +236,9 @@ class resource implements resourceInterface
      */ 
     public static function getData()
     {
+        if(!isset(self::$data)){
+            self::$data = array();
+        }
         return self::$data;
     }
 
@@ -263,7 +266,7 @@ class resource implements resourceInterface
         if(empty(self::getData()) || !isset($field) || empty($field)){
             return '';
         }
-        return self::$data->$field;
+        return self::$data[$field];
     }
 
     /**
@@ -283,7 +286,7 @@ class resource implements resourceInterface
             self::setError('Não encontrado o objeto Data');
             return false;
         }
-        self::$data->$field = $value;
+        self::$data[$field] = $value;
         return true;
     }
 

@@ -4,22 +4,51 @@ namespace data\model;
 
 use data\resource\resource;
 use data\model\modelInterface;
+use data\model\utils;
 
-class model implements modelInterface
+class model extends utils implements modelInterface
 {
+    const INFO_COLUMN = array(
+        'name'  => null,
+        'label' => null,
+        'pk'    => null,
+        'type'  => null,
+    );
+    
     public $table;
     public $key;
-    public $isNew;
+    public $isNew = true;
     public $dicionary = null;
     protected $rows;
     protected $error;
-
 
     public function __construct(string $table, string $key)
     {
         $this->setTable($table);
         $this->setKey($key);
         $this->rows();
+    }
+
+    /**
+     * Informações das colunas visíveis
+     *
+     * @return void
+     */
+    public function visibleColumns()
+    {
+        return array(
+            'config' => array(
+                'name'   => 'config',
+                'table'  => 'users',
+                'key'    => 'user_id'
+            ),
+            'user_id' => array(
+                'name'  => 'user_id',
+                'label' => 'Id',
+                'pk'    => true,
+                'type'  => 'integer',
+            ),
+        );
     }
 
     /**
@@ -131,6 +160,60 @@ class model implements modelInterface
         }
 
         return $resource;
+    }
+
+    /**
+     * Salva os dados do modelo
+     *
+     * @return bool
+     */
+    public function save()
+    {
+        if(empty($this->getRows())){
+            return false;
+        }
+
+        $resource = new resource();
+
+        $sql = $this->queryForSave($this->visibleColumns(), $this->getData());
+        if(empty($sql)){
+            $this->setError('Erro na geração da query de salvamento.');
+            return false;
+        }
+
+        if(!$resource::query($sql)){
+            $this->setError($resource::getError());
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Salva os dados do modelo
+     *
+     * @return bool
+     */
+    public function delete()
+    {
+        if(empty($this->getRows())){
+            return false;
+        }
+
+        $resource = new resource();
+
+        $sql = $this->queryForDelete($this->visibleColumns(), $this->getData());
+        if(empty($sql)){
+            $this->setError('Erro na geração da query de deleção.');
+            return false;
+        }
+
+        if(!$resource::query($sql)){
+            $this->setError($resource::getError());
+            return false;
+        }
+
+        return true;
     }
 
     /**
