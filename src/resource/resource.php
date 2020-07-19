@@ -102,8 +102,8 @@ class resource implements resourceInterface
         }
     }
 
-        /**
-     * Executa uma instruÃ§Ã£o MySQL
+    /**
+     * Executa uma instrução MySQL
      * 
      */
     public static function dicionary(string $sql)

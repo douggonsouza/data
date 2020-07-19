@@ -7,14 +7,7 @@ use data\model\modelInterface;
 use data\model\utils;
 
 class model extends utils implements modelInterface
-{
-    const INFO_COLUMN = array(
-        'name'  => null,
-        'label' => null,
-        'pk'    => null,
-        'type'  => null,
-    );
-    
+{   
     public $table;
     public $key;
     public $isNew = true;
@@ -37,16 +30,14 @@ class model extends utils implements modelInterface
     public function visibleColumns()
     {
         return array(
-            'config' => array(
-                'name'   => 'config',
-                'table'  => 'users',
-                'key'    => 'user_id'
-            ),
-            'user_id' => array(
-                'name'  => 'user_id',
-                'label' => 'Id',
-                'pk'    => true,
-                'type'  => 'integer',
+            'table'  => 'users',
+            'key'    => 'user_id',
+            'columns' => array(
+                'user_id' => array(
+                    'label' => 'Id',
+                    'pk'    => true,
+                    'type'  => 'integer',
+                ),
             ),
         );
     }

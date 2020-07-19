@@ -25,28 +25,31 @@ class utils
 
         // existe id
         $where = null;
-        if(isset($data[$infoColumns['config']['key']])){
-            $where = $infoColumns['config']['key'].' = '.$this->prepareSqlValue('integer', $data[$infoColumns['config']['key']]);
+        if(isset($data[$infoColumns['key']])){
+            $where = $infoColumns['key'].' = '.$this->prepareSqlValue(
+                $infoColumns['columns'][$infoColumns['key']]['type'],
+                $data[$infoColumns['key']]
+            );
         }
-
+        
         // array do conteúdo
         $content = array();
-        foreach($infoColumns as $index => $item){
-            if($item['pk'] || $item['name'] === 'config'){
+        foreach($infoColumns['columns'] as $index => $item){
+            if($item['pk']){
                 continue;
             }
             if(isset($where)){
-                $content[$item['name']] = $item['name'].' = '.$this->prepareSqlValue($item['type'], $data[$item['name']]).'';
+                $content[$index] = $index.' = '.$this->prepareSqlValue($item['type'], $data[$index]).'';
                 continue;
             }
-            $content[$item['name']] = $this->prepareSqlValue($item['type'], $data[$item['name']]);
+            $content[$index] = $this->prepareSqlValue($item['type'], $data[$index]);
         }
 
         // update
         if(isset($where)){
             $sql = sprintf(
                 "UPDATE %1\$s SET %2\$s WHERE %3\$s;",
-                $infoColumns['config']['table'],
+                $infoColumns['table'],
                 implode(', ',$content),
                 $where
             );
@@ -55,7 +58,7 @@ class utils
         // save
         $sql = sprintf(
             "INSERT INTO %1\$s (%2\$s) VALUES (%3\$s);",
-            $infoColumns['config']['table'],
+            $infoColumns['table'],
             implode(', ', array_keys($content)),
             implode(', ',$content),
         );
@@ -83,8 +86,11 @@ class utils
 
         // existe id
         $where = null;
-        if(isset($data[$infoColumns['config']['key']])){
-            $where = $infoColumns['config']['key'].' = '.$this->prepareSqlValue('integer', $data[$infoColumns['config']['key']]);
+        if(isset($data[$infoColumns['key']])){
+            $where = $infoColumns['key'].' = '.$this->prepareSqlValue(
+                $infoColumns['columns'][$infoColumns['key']]['type'],
+                $data[$infoColumns['key']]
+            );
         }
         if(!isset($where)){
             $this->setError('Não é possível deletar um novo resource.');
@@ -94,7 +100,7 @@ class utils
         // update
         $sql = sprintf(
             "DELETE FROM %1\$s WHERE %2\$s;",
-            $infoColumns['config']['table'],
+            $infoColumns['table'],
             $where
         );
         return $sql;

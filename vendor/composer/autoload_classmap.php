@@ -9,9 +9,7 @@ return array(
     'data\\connection\\conn' => $baseDir . '/src/connection/conn.php',
     'data\\model\\model' => $baseDir . '/src/model/model.php',
     'data\\model\\modelInterface' => $baseDir . '/src/model/modelInterface.php',
-    'data\\model\\models' => $baseDir . '/src/model/models.php',
-    'data\\orm\\orm' => $baseDir . '/src/orm/orm.php',
-    'data\\resource\\dicionary' => $baseDir . '/src/resource/dicionary.php',
+    'data\\model\\utils' => $baseDir . '/src/model/utils.php',
     'data\\resource\\resource' => $baseDir . '/src/resource/resource.php',
     'data\\resource\\resourceInterface' => $baseDir . '/src/resource/resourceInterface.php',
 );
