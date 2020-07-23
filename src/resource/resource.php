@@ -13,6 +13,7 @@ class resource implements resourceInterface
     protected static $error;
     protected static $index = -1;
     protected static $isEof = false;
+    protected static $new   = true;
 
     /**
      * Conecta o banco de dados
@@ -45,7 +46,7 @@ class resource implements resourceInterface
      * Expõe o total de linha afetadas pela query
      * @return int
     */
-    protected static function totalRows()
+    protected static function total()
     {
         if(empty(self::getResource())){
             return false;
@@ -59,12 +60,12 @@ class resource implements resourceInterface
      * 
      * @return array|null
      */
-    public static function asAllArray($type = MYSQLI_ASSOC)
+    public static function asArray()
     {
         if(empty(self::getResource())){
             return null;
         }
-        return self::getResource()->fetch_all($type);
+        return mysqli_fetch_all(self::getResource(), MYSQLI_ASSOC);
     }
 
     /**
@@ -103,6 +104,68 @@ class resource implements resourceInterface
     }
 
     /**
+     * Busca entre os registros
+     *
+     * @param string $table
+     * @param array  $search
+     * @return bool
+     */
+    public static function search(string $table, array $search)
+    {
+        if(!isset($table) || empty($table)){
+            self::setError('Não é permitido table nulo.');
+            return false;
+        }
+
+        if(!isset($search) || empty($search)){
+            self::setError('Não é permitido search nulo.');
+            return false;
+        }
+
+        if(!self::query(sprintf(
+            "SELECT * FROM %1\$s WHERE %2\$s;",
+            $table,
+            implode(' AND ', $search)
+        ))){
+            self::setError(self::getConn()->error);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Busca entre os registros da tabela ou retorna todos
+     *
+     * @param string $table
+     * @param array  $search
+     * @return bool
+     */
+    public static function seek(string $table, array $search = null)
+    {
+        if(!isset($table) || empty($table)){
+            self::setError('Não é permitido table nulo.');
+            return false;
+        }
+
+        $where = null;
+        if(isset($search) && !empty($search)){
+            $where = ' WHERE '.implode(' AND ', $search);
+        }
+
+        if(!self::query(sprintf(
+            "SELECT * FROM %1\$s%2\$s;",
+            $table,
+            $where
+        ))){
+            self::setError(self::getConn()->error);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Executa uma instrução MySQL
      * 
      */
@@ -126,7 +189,7 @@ class resource implements resourceInterface
             }
             self::getConn()->query('SET SQL_SAFE_UPDATES = 1;');
             
-            return self::asAllArray();
+            return self::asArray();
         }
         catch(\Exception $e){
             return false;
@@ -172,7 +235,6 @@ class resource implements resourceInterface
             return false;
         }
 
-
         self::setIndex(self::getIndex() - 1);
         self::data();
 
@@ -205,7 +267,7 @@ class resource implements resourceInterface
             return false;
         }
 
-        self::setIndex(self::totalRows() - 1);
+        self::setIndex(self::total() - 1);
         self::data();
 
         return true;
@@ -249,7 +311,7 @@ class resource implements resourceInterface
      */ 
     protected static function setData($data)
     {
-        if(!isset($data) && self::getIndex() >= self::totalRows()){
+        if(!isset($data) && self::getIndex() >= self::total()){
             self::setIsEof(true);
             return;
         }
@@ -328,6 +390,10 @@ class resource implements resourceInterface
         self::$resource = null;
         if(isset($resource) && !empty($resource) && $resource != false){
             self::$resource = $resource;
+            self::setNew(true);
+            if($resource->num_rows > 0){
+                self::setNew(false);
+            }
         }
     }
 
@@ -346,7 +412,7 @@ class resource implements resourceInterface
      */ 
     public static function setIndex($index)
     {
-        if(isset($index) && $index <= self::totalRows()){
+        if(isset($index) && $index <= self::total()){
             self::$index = $index;
             self::getResource()->data_seek(self::getIndex());
         }
@@ -370,5 +436,23 @@ class resource implements resourceInterface
         if(isset($isEof) && !empty($isEof)){
             self::$isEof = $isEof;
         }
+    }
+
+    /**
+     * Get the value of new
+     */ 
+    public static function getNew()
+    {
+        return self::$new;
+    }
+
+    /**
+     * Set the value of new
+     *
+     * @return  self
+     */ 
+    public static function setNew($new)
+    {
+        self::$new = $new;
     }
 }

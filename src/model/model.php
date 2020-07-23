@@ -10,16 +10,14 @@ class model extends utils implements modelInterface
 {   
     public $table;
     public $key;
-    public $isNew = true;
     public $dicionary = null;
-    protected $rows;
+    protected $records;
     protected $error;
 
     public function __construct(string $table, string $key)
     {
         $this->setTable($table);
         $this->setKey($key);
-        $this->rows();
     }
 
     /**
@@ -62,6 +60,110 @@ class model extends utils implements modelInterface
             return null;
         }
         return $dicionary;
+    }
+
+    /**
+     * Move o ponteiro para o prÃ³ximo
+     * 
+     */
+    public function next()
+    {
+        if(empty($this->getRecords())){
+            return false;
+        }
+
+        return $this->getRecords()::next();
+    }
+
+     /**
+     * Move o ponteiro para o anterior
+     * 
+     */
+    public function previous()
+    {
+        if(empty($this->getRecords())){
+            return false;
+        }
+
+        return $this->getRecords()::previus();
+    }
+
+    /**
+     * Move o ponteiro para o primeiro
+     * 
+     */
+    public function first()
+    {
+        if(empty($this->getRecords())){
+            return false;
+        }
+
+        return $this->getRecords()::first();
+    }
+
+    /**
+     * Move o ponteiro para o Ãºltimo
+     * 
+     */
+    public function last()
+    {
+        if(empty($this->getRecords())){
+            return false;
+        }
+
+        return $this->getRecords()::last();
+    }
+
+    /**
+     * Get the value of data
+     */ 
+    public function getData()
+    {
+        if(empty($this->getRecords())){
+            return false;
+        }
+
+        return $this->getRecords()::getData();
+    }
+
+    /**
+     * Get the value of data
+     */ 
+    public function getField(string $field)
+    {
+        if(empty($this->getRecords())){
+            return false;
+        }
+
+        return $this->getRecords()::getField($field);
+    }
+
+    /**
+     * Preenche um campo com valor
+     *
+     * @param string $field
+     * @param mixed $value
+     * @return bool
+     */
+    public function setField(string $field, $value)
+    {
+        if(empty($this->getRecords())){
+            return false;
+        }
+
+        return $this->getRecords()::setField($field, $value);
+    }
+
+    /**
+     * Get the value of isEof
+     */ 
+    public function isEof()
+    {
+        if(empty($this->getRecords())){
+            return false;
+        }
+
+        return $this->getRecords()::getisEof();
     }
 
     /**
@@ -160,7 +262,7 @@ class model extends utils implements modelInterface
      */
     public function save()
     {
-        if(empty($this->getRows())){
+        if(empty($this->getRecords())){
             return false;
         }
 
@@ -181,13 +283,52 @@ class model extends utils implements modelInterface
     }
 
     /**
+     * Expõe o total de linha afetadas pela query
+     * @return int
+    */
+    protected function total()
+    {
+        if(empty($this->getRecords())){
+            return null;
+        }
+
+        return $this->getRecords()::total();
+    }
+
+    /**
+     * Devolve array associativo de todos os registros
+     * 
+     * @return array|null
+     */
+    public function asArray()
+    {
+        if(empty($this->getRecords())){
+            return null;
+        }
+        return $this->getRecords()::asArray();
+    }
+
+    /**
+     * Executa uma instruÃ§Ã£o MySQL
+     * 
+     */
+    public function query(string $sql)
+    {
+        if(empty($this->getRecords())){
+            return null;
+        }
+
+        return $this->getRecords()::query($sql);
+    }
+
+    /**
      * Salva os dados do modelo
      *
      * @return bool
      */
     public function delete()
     {
-        if(empty($this->getRows())){
+        if(empty($this->getRecords())){
             return false;
         }
 
@@ -208,14 +349,69 @@ class model extends utils implements modelInterface
     }
 
     /**
-     * Carrega a propriedade rows com um resource
+     * Carrega a propriedade records com um resource
      *
      * @return void
      */
-    public function rows()
+    public function records(string $sql = null)
     {
-        $this->rows = new resource();
-        $this->rows::query("SELECT * FROM ".$this->getTable().";");
+        $this->records = new resource();
+        if(isset($sql)){
+            $this->records::query($sql);
+            return true;
+        }
+        $this->records::query("SELECT * FROM ".$this->getTable().";");
+        return true;
+    }
+
+    /**
+     * Busca entre os registros da tabela
+     *
+     * @param array $search
+     * @return void
+     */
+    public function seek(array $search)
+    {
+        if(empty($this->getTable())){
+            return null;
+        }
+
+        $this->setRecords(new resource());
+        if(!$this->getRecords()::seek($this->getTable(), $search)){
+            $this->setError($this->getRecords()::getError());
+            return null;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Busca entre os registros
+     *
+     * @param string $table
+     * @return bool
+     */
+    public function search(array $search)
+    {
+        if(empty($this->getTable())){
+            return null;
+        }
+
+        $this->setRecords(new resource());
+        if(!$this->getRecords()::search($this->getTable(), $search)){
+            $this->setError($this->getRecords()::getError());
+            return null;
+        }
+
+        return $this;
+    }
+
+    public function isNew()
+    {
+        if(empty($this->getRecords())){
+            return null;
+        }
+        return $this->getRecords()::getNew();
     }
 
     /**
@@ -263,85 +459,18 @@ class model extends utils implements modelInterface
     }
 
     /**
-     * Get the value of isNew
+     * Get the value of records
      */ 
-    public function getIsNew()
+    public function getRecords()
     {
-        return $this->isNew;
+        return $this->records;
     }
 
-    /**
-     * Set the value of isNew
-     *
-     * @return  self
-     */ 
-    protected function setIsNew($isNew)
+    protected function setRecords($records)
     {
-        if(isset($isNew) && !empty($isNew)){
-            $this->isNew = $isNew;
+        if(isset($records) && !empty($records)){
+            $this->records = $records;
         }
-    }
-
-    /**
-     * Get the value of rows
-     */ 
-    public function getRows()
-    {
-        return $this->rows;
-    }
-
-        /**
-     * Expõe o valor do campo
-     *
-     * @param string $field
-     * @return void
-     */ 
-    public function getData()
-    {
-        if(empty($this->getRows())){
-            return null;
-        }
-
-        return $this->getRows()::getData();
-    }
-
-    /**
-     * Expõe o valor do campo
-     *
-     * @param string $field
-     * @return void
-     */ 
-    public function getField(string $field)
-    {
-        if(empty($this->getRows())){
-            return null;
-        }
-
-        if(!isset($field) || empty($field)){
-            return null;
-        }
-
-        return $this->getRows()::getField($field);
-    }
-
-    /**
-     * Atualiza o valor para o campo
-     *
-     * @param string $field
-     * @param mixed $value
-     * @return bool
-     */ 
-    public function setField(string $field, $value)
-    {
-        if(empty($this->getRows())){
-            return null;
-        }
-
-        if(!isset($field) || empty($field)){
-            return null;
-        }
-
-        return $this->getRows()::setField($field, $value);
     }
 
     /**
