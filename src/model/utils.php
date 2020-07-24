@@ -14,12 +14,12 @@ class utils
     public function queryForSave(array $infoColumns, array $data)
     {
         if(!isset($infoColumns) || empty($infoColumns)){
-            $this->setError('Não é permitido parâmetro infoColumns nulo.');
+            $this->setError('NÃ£o Ã© permitido parÃ¢metro infoColumns nulo.');
             return false;
         }
 
         if(!isset($data) || empty($data)){
-            $this->setError('Não é permitido parâmetro data nulo.');
+            $this->setError('NÃ£o Ã© permitido parÃ¢metro data nulo.');
             return false;
         }
 
@@ -32,7 +32,7 @@ class utils
             );
         }
         
-        // array do conteúdo
+        // array do conteï¿½do
         $content = array();
         foreach($infoColumns['columns'] as $index => $item){
             if($item['pk']){
@@ -65,7 +65,7 @@ class utils
         return $sql;
     }
 
-        /**
+    /**
      * Cria query de Save
      *
      * @param array $infoColumns
@@ -75,12 +75,12 @@ class utils
     public function queryForDelete(array $infoColumns, array $data)
     {
         if(!isset($infoColumns) || empty($infoColumns)){
-            $this->setError('Não é permitido parâmetro infoColumns nulo.');
+            $this->setError('NÃ£o Ã© permitido parÃ¢metro infoColumns nulo.');
             return false;
         }
 
         if(!isset($data) || empty($data)){
-            $this->setError('Não é permitido parâmetro data nulo.');
+            $this->setError('NÃ¢o Ã© permitido parÃ¢metro data nulo.');
             return false;
         }
 
@@ -93,7 +93,7 @@ class utils
             );
         }
         if(!isset($where)){
-            $this->setError('Não é possível deletar um novo resource.');
+            $this->setError('NÃ£o Ã© possÃ­vel deletar um novo resource.');
             return false;
         }
 
@@ -140,5 +140,28 @@ class utils
             default:
                 return $value;
         }
+    }
+
+    public function arrayByVisibleColumns(array $infoColumns, array $data)
+    {
+        $content = array();
+
+        if(!isset($infoColumns) || empty($infoColumns) || !isset($data) || empty($data)){
+            return $content;
+        }
+
+        // array do conteÃºdo
+        foreach($infoColumns['columns'] as $index => $item){
+            if(isset($data[$index])){
+                $content[$index] = trim(
+                    str_pad(
+                        $data[$index],
+                        isset($item['limit'])? $item['limit']: 255
+                    )
+                );
+            }
+        }
+
+        return $content;
     }
 }

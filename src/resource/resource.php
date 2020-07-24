@@ -43,11 +43,15 @@ class resource implements resourceInterface
     }
 
     /**
-     * Exp�e o total de linha afetadas pela query
+     * Expõe o total de linha afetadas pela query
      * @return int
     */
     protected static function total()
     {
+        if(is_bool(self::getResource()) && self::getResource() === true){
+            return 0;
+        }
+
         if(empty(self::getResource())){
             return false;
         }
@@ -62,6 +66,10 @@ class resource implements resourceInterface
      */
     public static function asArray()
     {
+        if(is_bool(self::getResource()) && self::getResource() === true){
+            return array();
+        }
+
         if(empty(self::getResource())){
             return null;
         }
@@ -69,7 +77,7 @@ class resource implements resourceInterface
     }
 
     /**
-     * Executa uma instrução MySQL
+     * Executa uma instruÃ§Ã£o MySQL
      * 
      */
     public static function query(string $sql)
@@ -86,7 +94,7 @@ class resource implements resourceInterface
         try{
             self::getConn()->query('SET SQL_SAFE_UPDATES = 0;');
             self::setResource(self::getConn()->query((string) $sql));
-            if(empty(self::getResource())){
+            if((is_bool($result) && $result === false) || empty(self::getResource())){
                 self::setError(self::getConn()->error);
                 return false;
             }
@@ -113,12 +121,12 @@ class resource implements resourceInterface
     public static function search(string $table, array $search)
     {
         if(!isset($table) || empty($table)){
-            self::setError('N�o � permitido table nulo.');
+            self::setError('Não é permitido table nulo.');
             return false;
         }
 
         if(!isset($search) || empty($search)){
-            self::setError('N�o � permitido search nulo.');
+            self::setError('Não é permitido search nulo.');
             return false;
         }
 
@@ -144,7 +152,7 @@ class resource implements resourceInterface
     public static function seek(string $table, array $search = null)
     {
         if(!isset($table) || empty($table)){
-            self::setError('N�o � permitido table nulo.');
+            self::setError('Não é permitido table nulo.');
             return false;
         }
 
@@ -166,7 +174,7 @@ class resource implements resourceInterface
     }
 
     /**
-     * Executa uma instru��o MySQL
+     * Executa uma instrução MySQL
      * 
      */
     public static function dicionary(string $sql)
@@ -203,19 +211,28 @@ class resource implements resourceInterface
      */
     public static function data()
     {
+        if(is_bool(self::getResource()) && self::getResource() === true){
+            return true;
+        }
+
         if(empty(self::getResource())){
             return false;
         }
+
         self::setData(self::getResource()->fetch_assoc());
         return true;
     }
 
     /**
-     * Move o ponteiro para o próximo
+     * Move o ponteiro para o prÃ³ximo
      * 
      */
     public static function next()
     {
+        if(is_bool(self::getResource()) && self::getResource() === true){
+            return true;
+        }
+
         if(empty(self::getResource())){
             return false;
         }
@@ -231,6 +248,10 @@ class resource implements resourceInterface
      */
     public static function previous()
     {
+        if(is_bool(self::getResource()) && self::getResource() === true){
+            return true;
+        }
+
         if(empty(self::getResource())){
             return false;
         }
@@ -247,6 +268,10 @@ class resource implements resourceInterface
      */
     public static function first()
     {
+        if(is_bool(self::getResource()) && self::getResource() === true){
+            return true;
+        }
+
         if(empty(self::getResource())){
             return false;
         }
@@ -258,11 +283,15 @@ class resource implements resourceInterface
     }
 
     /**
-     * Move o ponteiro para o último
+     * Move o ponteiro para o Ãºltimo
      * 
      */
     public static function last()
     {
+        if(is_bool(self::getResource()) && self::getResource() === true){
+            return true;
+        }
+
         if(empty(self::getResource())){
             return false;
         }
@@ -291,6 +320,26 @@ class resource implements resourceInterface
         if(isset($conn) && !empty($conn)){
             self::$conn = $conn;
         }
+    }
+
+    /**
+     * Popula o objeto data pelo array
+     *
+     * @param array $data
+     * @return bool
+     */
+    public static function populate(array $data)
+    {
+        if(empty($data)){
+            self::setError('Não é permitido vazio no parâmetro Data.');
+            return false;
+        }
+
+        foreach($data as $index => $value){
+            self::$data[$index] = $value;
+        }
+
+        return true;
     }
 
     /**
@@ -326,7 +375,7 @@ class resource implements resourceInterface
     public static function getField(string $field)
     {
         if(empty(self::getData()) || !isset($field) || empty($field)){
-            return '';
+            return null;
         }
         return self::$data[$field];
     }
@@ -341,12 +390,11 @@ class resource implements resourceInterface
     public static function setField(string $field, $value)
     {
         if(!isset($field) || empty($field) || !isset($value) || empty($value)){
-            self::setError('N�o � permitido nulo para os par�mentros Field ou Value.');
+            self::setError('Não é permitido nulo para os parâmentros Field ou Value.');
             return false;
         }
         if(empty(self::getData())){
-            self::setError('N�o encontrado o objeto Data');
-            return false;
+            self::setData(array());
         }
         self::$data[$field] = $value;
         return true;

@@ -21,23 +21,25 @@ class model extends utils implements modelInterface
     }
 
     /**
-     * Informa��es das colunas vis�veis
+     * Informações das colunas visíveis
      *
+     * array(
+     *      'table'  => 'users',
+     *      'key'    => 'user_id',
+     *      'columns' => array(
+     *              'user_id' => array(
+     *              'label' => 'Id',
+     *              'pk'    => true,
+     *              'type'  => 'integer',
+     *              'limit' => 11
+     *          ),
+     *      ),
+     * );
      * @return void
      */
     public function visibleColumns()
     {
-        return array(
-            'table'  => 'users',
-            'key'    => 'user_id',
-            'columns' => array(
-                'user_id' => array(
-                    'label' => 'Id',
-                    'pk'    => true,
-                    'type'  => 'integer',
-                ),
-            ),
-        );
+        return array();
     }
 
     /**
@@ -63,7 +65,7 @@ class model extends utils implements modelInterface
     }
 
     /**
-     * Move o ponteiro para o próximo
+     * Move o ponteiro para o prÃ³ximo
      * 
      */
     public function next()
@@ -102,7 +104,7 @@ class model extends utils implements modelInterface
     }
 
     /**
-     * Move o ponteiro para o último
+     * Move o ponteiro para o Ãºltimo
      * 
      */
     public function last()
@@ -148,7 +150,7 @@ class model extends utils implements modelInterface
     public function setField(string $field, $value)
     {
         if(empty($this->getRecords())){
-            return false;
+            $this->setRecords(new resource());
         }
 
         return $this->getRecords()::setField($field, $value);
@@ -256,6 +258,33 @@ class model extends utils implements modelInterface
     }
 
     /**
+     * Popula o objeto data pelo array
+     *
+     * @param array $data
+     * @return bool
+     */
+    public function populate(array $data)
+    {
+        if(empty($this->visibleColumns())){
+            $this->setError('Não existe configuração para colunas visíveis.');
+            return false;
+        }
+
+        if(empty($this->getRecords())){
+            $this->setRecords(new resource());
+        }
+
+        // array do conteúdo
+        $content = $this->arrayByVisibleColumns($this->visibleColumns(), $data);
+        if(!$this->getRecords()::populate($content)){
+            $this->setError('Erro na população do objeto Data.');
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Salva os dados do modelo
      *
      * @return bool
@@ -270,7 +299,7 @@ class model extends utils implements modelInterface
 
         $sql = $this->queryForSave($this->visibleColumns(), $this->getData());
         if(empty($sql)){
-            $this->setError('Erro na gera��o da query de salvamento.');
+            $this->setError('Erro na geração da query de salvamento.');
             return false;
         }
 
@@ -283,7 +312,7 @@ class model extends utils implements modelInterface
     }
 
     /**
-     * Exp�e o total de linha afetadas pela query
+     * Expõe o total de linha afetadas pela query
      * @return int
     */
     protected function total()
@@ -309,7 +338,7 @@ class model extends utils implements modelInterface
     }
 
     /**
-     * Executa uma instrução MySQL
+     * Executa uma instruÃ§Ã£o MySQL
      * 
      */
     public function query(string $sql)
@@ -336,7 +365,7 @@ class model extends utils implements modelInterface
 
         $sql = $this->queryForDelete($this->visibleColumns(), $this->getData());
         if(empty($sql)){
-            $this->setError('Erro na gera��o da query de dele��o.');
+            $this->setError('Erro na geração da query de deleção.');
             return false;
         }
 
