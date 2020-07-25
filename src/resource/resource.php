@@ -48,12 +48,8 @@ class resource implements resourceInterface
     */
     protected static function total()
     {
-        if(is_bool(self::getResource()) && self::getResource() === true){
-            return 0;
-        }
-
         if(empty(self::getResource())){
-            return false;
+            return 0;
         }
 
         return mysqli_num_rows(self::getResource());
@@ -66,12 +62,8 @@ class resource implements resourceInterface
      */
     public static function asArray()
     {
-        if(is_bool(self::getResource()) && self::getResource() === true){
-            return array();
-        }
-
         if(empty(self::getResource())){
-            return null;
+            return array();
         }
         return mysqli_fetch_all(self::getResource(), MYSQLI_ASSOC);
     }
@@ -94,7 +86,7 @@ class resource implements resourceInterface
         try{
             self::getConn()->query('SET SQL_SAFE_UPDATES = 0;');
             self::setResource(self::getConn()->query((string) $sql));
-            if((is_bool($result) && $result === false) || empty(self::getResource())){
+            if(!empty(self::getConn()->error)){
                 self::setError(self::getConn()->error);
                 return false;
             }
@@ -211,12 +203,8 @@ class resource implements resourceInterface
      */
     public static function data()
     {
-        if(is_bool(self::getResource()) && self::getResource() === true){
-            return true;
-        }
-
         if(empty(self::getResource())){
-            return false;
+            return true;
         }
 
         self::setData(self::getResource()->fetch_assoc());
@@ -229,12 +217,8 @@ class resource implements resourceInterface
      */
     public static function next()
     {
-        if(is_bool(self::getResource()) && self::getResource() === true){
-            return true;
-        }
-
         if(empty(self::getResource())){
-            return false;
+            return true;
         }
 
         self::setIndex(self::getIndex() + 1);
@@ -248,12 +232,8 @@ class resource implements resourceInterface
      */
     public static function previous()
     {
-        if(is_bool(self::getResource()) && self::getResource() === true){
-            return true;
-        }
-
         if(empty(self::getResource())){
-            return false;
+            return true;
         }
 
         self::setIndex(self::getIndex() - 1);
@@ -268,12 +248,8 @@ class resource implements resourceInterface
      */
     public static function first()
     {
-        if(is_bool(self::getResource()) && self::getResource() === true){
-            return true;
-        }
-
         if(empty(self::getResource())){
-            return false;
+            return true;
         }
 
         self::setIndex(0);
@@ -288,12 +264,8 @@ class resource implements resourceInterface
      */
     public static function last()
     {
-        if(is_bool(self::getResource()) && self::getResource() === true){
-            return true;
-        }
-
         if(empty(self::getResource())){
-            return false;
+            return true;
         }
 
         self::setIndex(self::total() - 1);
@@ -436,7 +408,7 @@ class resource implements resourceInterface
     public static function setResource($resource)
     {
         self::$resource = null;
-        if(isset($resource) && !empty($resource) && $resource != false){
+        if(isset($resource) && !empty($resource) && !is_bool($resource)){
             self::$resource = $resource;
             self::setNew(true);
             if($resource->num_rows > 0){
@@ -460,6 +432,10 @@ class resource implements resourceInterface
      */ 
     public static function setIndex($index)
     {
+        if(empty(self::getResource())){
+            return;
+        }
+
         if(isset($index) && $index <= self::total()){
             self::$index = $index;
             self::getResource()->data_seek(self::getIndex());
