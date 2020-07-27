@@ -8,12 +8,12 @@ use data\resource\resourceInterface;
 class resource implements resourceInterface
 {
     protected static $conn;
-    protected static $data;
-    protected static $resource;
-    protected static $error;
-    protected static $index = -1;
-    protected static $isEof = false;
-    protected static $new   = true;
+    protected $data;
+    protected $resource;
+    protected $error;
+    protected $index = -1;
+    protected $isEof = false;
+    protected $new   = true;
 
     /**
      * Conecta o banco de dados
@@ -46,13 +46,13 @@ class resource implements resourceInterface
      * Expõe o total de linha afetadas pela query
      * @return int
     */
-    protected static function total()
+    public function total()
     {
-        if(empty(self::getResource())){
+        if(empty($this->getResource())){
             return 0;
         }
 
-        return mysqli_num_rows(self::getResource());
+        return mysqli_num_rows($this->getResource());
     }
 
     /**
@@ -60,19 +60,20 @@ class resource implements resourceInterface
      * 
      * @return array|null
      */
-    public static function asArray()
+    public function asArray()
     {
-        if(empty(self::getResource())){
+        if(empty($this->getResource())){
             return array();
         }
-        return mysqli_fetch_all(self::getResource(), MYSQLI_ASSOC);
+
+        return mysqli_fetch_all($this->getResource(), MYSQLI_ASSOC);
     }
 
     /**
-     * Executa uma instruÃ§Ã£o MySQL
+     * Executa uma instrução MySQL
      * 
      */
-    public static function query(string $sql)
+    public function query(string $sql)
     {
         if(!isset($sql) || empty($sql)){
             return false;
@@ -85,18 +86,52 @@ class resource implements resourceInterface
         
         try{
             self::getConn()->query('SET SQL_SAFE_UPDATES = 0;');
-            self::setResource(self::getConn()->query((string) $sql));
+            $this->setResource(self::getConn()->query((string) $sql));
             if(!empty(self::getConn()->error)){
-                self::setError(self::getConn()->error);
+                $this->setError(self::getConn()->error);
                 return false;
             }
             self::getConn()->query((string) 'SET SQL_SAFE_UPDATES = 1;');
             
-            if(!self::next()){
-                self::setError(self::getConn()->error);
+            if(!$this->next()){
+                $this->setError(self::getConn()->error);
                 return false;
             }
             return true;
+        }
+        catch(\Exception $e){
+            return false;
+        }
+    }
+
+    /**
+     * Executa uma instrução MySQL
+     * 
+     */
+    public function execute(string $sql)
+    {
+        if(!isset($sql) || empty($sql)){
+            return false;
+        }
+
+        self::conn();
+        if(!self::getConn()){
+            return false;
+        }
+        
+        try{
+            self::getConn()->query('SET SQL_SAFE_UPDATES = 0;');
+            $resource = self::getConn()->query((string) $sql);
+            if(!empty(self::getConn()->error)){
+                $this->setError(self::getConn()->error);
+                return false;
+            }
+            self::getConn()->query((string) 'SET SQL_SAFE_UPDATES = 1;');
+
+            if(is_bool($resource)){
+                return $resource;
+            }
+            return mysqli_fetch_all($resource, MYSQLI_ASSOC);
         }
         catch(\Exception $e){
             return false;
@@ -110,24 +145,24 @@ class resource implements resourceInterface
      * @param array  $search
      * @return bool
      */
-    public static function search(string $table, array $search)
+    public function search(string $table, array $search)
     {
         if(!isset($table) || empty($table)){
-            self::setError('Não é permitido table nulo.');
+            $this->setError('Não é permitido table nulo.');
             return false;
         }
 
         if(!isset($search) || empty($search)){
-            self::setError('Não é permitido search nulo.');
+            $this->setError('Não é permitido search nulo.');
             return false;
         }
 
-        if(!self::query(sprintf(
+        if(!$this->query(sprintf(
             "SELECT * FROM %1\$s WHERE %2\$s;",
             $table,
             implode(' AND ', $search)
         ))){
-            self::setError(self::getConn()->error);
+            $this->setError(self::getConn()->error);
             return false;
         }
 
@@ -141,10 +176,10 @@ class resource implements resourceInterface
      * @param array  $search
      * @return bool
      */
-    public static function seek(string $table, array $search = null)
+    public function seek(string $table, array $search = null, string $sql = null)
     {
         if(!isset($table) || empty($table)){
-            self::setError('Não é permitido table nulo.');
+            $this->setError('Não é permitido table nulo.');
             return false;
         }
 
@@ -153,12 +188,17 @@ class resource implements resourceInterface
             $where = ' WHERE '.implode(' AND ', $search);
         }
 
-        if(!self::query(sprintf(
+        $query = sprintf(
             "SELECT * FROM %1\$s%2\$s;",
             $table,
             $where
-        ))){
-            self::setError(self::getConn()->error);
+        );
+        if(isset($sql)){
+            $query = $sql;
+        }
+
+        if(!$this->query($query)){
+            $this->setError(self::getConn()->error);
             return false;
         }
 
@@ -169,45 +209,45 @@ class resource implements resourceInterface
      * Executa uma instrução MySQL
      * 
      */
-    public static function dicionary(string $sql)
-    {
-        if(!isset($sql) || empty($sql)){
-            return false;
-        }
+    // public function dicionary(string $sql)
+    // {
+    //     if(!isset($sql) || empty($sql)){
+    //         return false;
+    //     }
 
-        self::conn();
-        if(!self::getConn()){
-            return false;
-        }
+    //     self::conn();
+    //     if(!self::getConn()){
+    //         return false;
+    //     }
         
-        try{
-            self::getConn()->query('SET SQL_SAFE_UPDATES = 0;');
-            self::setResource(self::getConn()->query((string) $sql));
-            if(empty(self::getResource())){
-                self::setError(self::getConn()->error);
-                return false;
-            }
-            self::getConn()->query('SET SQL_SAFE_UPDATES = 1;');
+    //     try{
+    //         self::getConn()->query('SET SQL_SAFE_UPDATES = 0;');
+    //         $this->setResource(self::getConn()->query((string) $sql));
+    //         if(empty($this->getResource())){
+    //             $this->setError(self::getConn()->error);
+    //             return false;
+    //         }
+    //         self::getConn()->query('SET SQL_SAFE_UPDATES = 1;');
             
-            return self::asArray();
-        }
-        catch(\Exception $e){
-            return false;
-        }
-    }
+    //         return $this->asArray();
+    //     }
+    //     catch(\Exception $e){
+    //         return false;
+    //     }
+    // }
 
     /**
      * Atualiza a propriedade data
      *
      * @return bool
      */
-    public static function data()
+    public function data()
     {
-        if(empty(self::getResource())){
+        if(empty($this->getResource())){
             return true;
         }
 
-        self::setData(self::getResource()->fetch_assoc());
+        $this->setData($this->getResource()->fetch_assoc());
         return true;
     }
 
@@ -215,14 +255,14 @@ class resource implements resourceInterface
      * Move o ponteiro para o prÃ³ximo
      * 
      */
-    public static function next()
+    public function next()
     {
-        if(empty(self::getResource())){
+        if(empty($this->getResource())){
             return true;
         }
 
-        self::setIndex(self::getIndex() + 1);
-        self::setData(self::getResource()->fetch_assoc());
+        $this->setIndex($this->getIndex() + 1);
+        $this->setData($this->getResource()->fetch_assoc());
         return true;
     }
 
@@ -230,14 +270,14 @@ class resource implements resourceInterface
      * Move o ponteiro para o anterior
      * 
      */
-    public static function previous()
+    public function previous()
     {
-        if(empty(self::getResource())){
+        if(empty($this->getResource())){
             return true;
         }
 
-        self::setIndex(self::getIndex() - 1);
-        self::data();
+        $this->setIndex($this->getIndex() - 1);
+        $this->data();
 
         return true;
     }
@@ -246,14 +286,14 @@ class resource implements resourceInterface
      * Move o ponteiro para o primeiro
      * 
      */
-    public static function first()
+    public function first()
     {
-        if(empty(self::getResource())){
+        if(empty($this->getResource())){
             return true;
         }
 
-        self::setIndex(0);
-        self::data();
+        $this->setIndex(0);
+        $this->data();
 
         return true;
     }
@@ -262,14 +302,14 @@ class resource implements resourceInterface
      * Move o ponteiro para o Ãºltimo
      * 
      */
-    public static function last()
+    public function last()
     {
-        if(empty(self::getResource())){
+        if(empty($this->getResource())){
             return true;
         }
 
-        self::setIndex(self::total() - 1);
-        self::data();
+        $this->setIndex($this->total() - 1);
+        $this->data();
 
         return true;
     }
@@ -300,15 +340,15 @@ class resource implements resourceInterface
      * @param array $data
      * @return bool
      */
-    public static function populate(array $data)
+    public function populate(array $data)
     {
         if(empty($data)){
-            self::setError('Não é permitido vazio no parâmetro Data.');
+            $this->setError('Não é permitido vazio no parâmetro Data.');
             return false;
         }
 
         foreach($data as $index => $value){
-            self::$data[$index] = $value;
+            $this->data[$index] = $value;
         }
 
         return true;
@@ -317,12 +357,12 @@ class resource implements resourceInterface
     /**
      * Get the value of data
      */ 
-    public static function getData()
+    public function getData()
     {
-        if(!isset(self::$data)){
-            self::$data = array();
+        if(!isset($this->data)){
+            $this->data = array();
         }
-        return self::$data;
+        return $this->data;
     }
 
     /**
@@ -330,26 +370,26 @@ class resource implements resourceInterface
      *
      * @return  self
      */ 
-    protected static function setData($data)
+    protected function setData($data)
     {
-        if(!isset($data) && self::getIndex() >= self::total()){
-            self::setIsEof(true);
+        if(!isset($data) && $this->getIndex() >= $this->total()){
+            $this->setIsEof(true);
             return;
         }
 
-        self::$data = $data;
-        self::setIsEof(false);
+        $this->data = $data;
+        $this->setIsEof(false);
     }
 
     /**
      * Get the value of data
      */ 
-    public static function getField(string $field)
+    public function getField(string $field)
     {
-        if(empty(self::getData()) || !isset($field) || empty($field)){
+        if(empty($this->getData()) || !isset($field) || empty($field)){
             return null;
         }
-        return self::$data[$field];
+        return $this->data[$field];
     }
 
     /**
@@ -359,25 +399,25 @@ class resource implements resourceInterface
      * @param mixed $value
      * @return bool
      */
-    public static function setField(string $field, $value)
+    public function setField(string $field, $value)
     {
         if(!isset($field) || empty($field) || !isset($value) || empty($value)){
-            self::setError('Não é permitido nulo para os parâmentros Field ou Value.');
+            $this->setError('Não é permitido nulo para os parâmentros Field ou Value.');
             return false;
         }
-        if(empty(self::getData())){
-            self::setData(array());
+        if(empty($this->getData())){
+            $this->setData(array());
         }
-        self::$data[$field] = $value;
+        $this->data[$field] = $value;
         return true;
     }
 
     /**
      * Get the value of error
      */ 
-    public static function getError()
+    public function getError()
     {
-        return self::$error;
+        return $this->error;
     }
 
     /**
@@ -385,19 +425,19 @@ class resource implements resourceInterface
      *
      * @return  self
      */ 
-    public static function setError($error)
+    public function setError($error)
     {
         if(isset($error) && !empty($error)){
-            self::$error = $error;
+            $this->error = $error;
         }
     }
 
     /**
      * Get the value of resource
      */ 
-    public static function getResource()
+    public function getResource()
     {
-        return self::$resource;
+        return $this->resource;
     }
 
     /**
@@ -405,14 +445,14 @@ class resource implements resourceInterface
      *
      * @return  self
      */ 
-    public static function setResource($resource)
+    public function setResource($resource)
     {
-        self::$resource = null;
+        $this->resource = null;
         if(isset($resource) && !empty($resource) && !is_bool($resource)){
-            self::$resource = $resource;
-            self::setNew(true);
+            $this->resource = $resource;
+            $this->setNew(true);
             if($resource->num_rows > 0){
-                self::setNew(false);
+                $this->setNew(false);
             }
         }
     }
@@ -420,9 +460,9 @@ class resource implements resourceInterface
     /**
      * Get the value of index
      */ 
-    public static function getIndex()
+    public function getIndex()
     {
-        return self::$index;
+        return $this->index;
     }
 
     /**
@@ -430,24 +470,24 @@ class resource implements resourceInterface
      *
      * @return  self
      */ 
-    public static function setIndex($index)
+    public function setIndex($index)
     {
-        if(empty(self::getResource())){
+        if(empty($this->getResource())){
             return;
         }
 
-        if(isset($index) && $index <= self::total()){
-            self::$index = $index;
-            self::getResource()->data_seek(self::getIndex());
+        if(isset($index) && $index <= $this->total()){
+            $this->index = $index;
+            $this->getResource()->data_seek($this->getIndex());
         }
     }
 
     /**
      * Get the value of isEof
      */ 
-    public static function getIsEof()
+    public function getIsEof()
     {
-        return self::$isEof;
+        return $this->isEof;
     }
 
     /**
@@ -458,16 +498,16 @@ class resource implements resourceInterface
     public function setIsEof($isEof)
     {
         if(isset($isEof) && !empty($isEof)){
-            self::$isEof = $isEof;
+            $this->isEof = $isEof;
         }
     }
 
     /**
      * Get the value of new
      */ 
-    public static function getNew()
+    public function getNew()
     {
-        return self::$new;
+        return $this->new;
     }
 
     /**
@@ -475,8 +515,8 @@ class resource implements resourceInterface
      *
      * @return  self
      */ 
-    public static function setNew($new)
+    public function setNew($new)
     {
-        self::$new = $new;
+        $this->new = $new;
     }
 }

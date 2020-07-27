@@ -26,23 +26,23 @@ class utils
         // existe id
         $where = null;
         if(isset($data[$infoColumns['key']])){
-            $where = $infoColumns['key'].' = '.$this->prepareSqlValue(
+            $where = $infoColumns['key'].' = '.$this->prepareValueByVisibleColumns(
                 $infoColumns['columns'][$infoColumns['key']]['type'],
                 $data[$infoColumns['key']]
             );
         }
         
-        // array do conte�do
+        // array do conteúdo
         $content = array();
         foreach($infoColumns['columns'] as $index => $item){
             if($item['pk']){
                 continue;
             }
             if(isset($where)){
-                $content[$index] = $index.' = '.$this->prepareSqlValue($item['type'], $data[$index]).'';
+                $content[$index] = $index.' = '.$this->prepareValueByVisibleColumns($item['type'], $data[$index]).'';
                 continue;
             }
-            $content[$index] = $this->prepareSqlValue($item['type'], $data[$index]);
+            $content[$index] = $this->prepareValueByVisibleColumns($item['type'], $data[$index]);
         }
 
         // update
@@ -87,7 +87,7 @@ class utils
         // existe id
         $where = null;
         if(isset($data[$infoColumns['key']])){
-            $where = $infoColumns['key'].' = '.$this->prepareSqlValue(
+            $where = $infoColumns['key'].' = '.$this->preprepareValueByVisibleColumns(
                 $infoColumns['columns'][$infoColumns['key']]['type'],
                 $data[$infoColumns['key']]
             );
@@ -113,7 +113,7 @@ class utils
      * @param mixed $value
      * @return void
      */
-    public function prepareSqlValue(string $type, $value = null)
+    public function prepareValueByVisibleColumns(string $type, $value = null)
     {
         if(!isset($type) || empty($type)){
             return $value;
@@ -156,6 +156,29 @@ class utils
                 $content[$index] = trim(
                     str_pad(
                         $data[$index],
+                        isset($item['limit'])? $item['limit']: 255
+                    )
+                );
+            }
+        }
+
+        return $content;
+    }
+
+    public function filterByVisibleColumns(array $infoColumns, array $data)
+    {
+        $content = array();
+
+        if(!isset($infoColumns) || empty($infoColumns) || !isset($data) || empty($data)){
+            return $content;
+        }
+
+        // array do conteúdo
+        foreach($infoColumns['columns'] as $index => $item){
+            if(isset($data[$index])){
+                $content[$index] = trim(
+                    str_pad(
+                        isset($item['type'])? $this->prepareValueByVisibleColumns($item['type'], $data[$index]): $data[$index],
                         isset($item['limit'])? $item['limit']: 255
                     )
                 );

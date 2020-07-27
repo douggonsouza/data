@@ -8,9 +8,9 @@ use data\model\utils;
 
 class model extends utils implements modelInterface
 {   
-    public $table;
-    public $key;
-    public $dicionary = null;
+    public    $table;
+    public    $key;
+    public    $dicionary = null;
     protected $records;
     protected $error;
 
@@ -56,9 +56,9 @@ class model extends utils implements modelInterface
         }
 
         $resource = new resource();
-        $dicionary = $resource::dicionary($this->getDicionary());
+        $dicionary = $resource->execute($this->getDicionary());
         if(!$dicionary){
-            $this->setError($resource::getError());
+            $this->setError($resource->getError());
             return null;
         }
         return $dicionary;
@@ -74,7 +74,7 @@ class model extends utils implements modelInterface
             return false;
         }
 
-        return $this->getRecords()::next();
+        return $this->getRecords()->next();
     }
 
      /**
@@ -87,7 +87,7 @@ class model extends utils implements modelInterface
             return false;
         }
 
-        return $this->getRecords()::previus();
+        return $this->getRecords()->previus();
     }
 
     /**
@@ -100,7 +100,7 @@ class model extends utils implements modelInterface
             return false;
         }
 
-        return $this->getRecords()::first();
+        return $this->getRecords()->first();
     }
 
     /**
@@ -113,7 +113,7 @@ class model extends utils implements modelInterface
             return false;
         }
 
-        return $this->getRecords()::last();
+        return $this->getRecords()->last();
     }
 
     /**
@@ -125,7 +125,7 @@ class model extends utils implements modelInterface
             return false;
         }
 
-        return $this->getRecords()::getData();
+        return $this->getRecords()->getData();
     }
 
     /**
@@ -137,7 +137,7 @@ class model extends utils implements modelInterface
             return false;
         }
 
-        return $this->getRecords()::getField($field);
+        return $this->getRecords()->getField($field);
     }
 
     /**
@@ -153,7 +153,7 @@ class model extends utils implements modelInterface
             $this->setRecords(new resource());
         }
 
-        return $this->getRecords()::setField($field, $value);
+        return $this->getRecords()->setField($field, $value);
     }
 
     /**
@@ -165,18 +165,18 @@ class model extends utils implements modelInterface
             return false;
         }
 
-        return $this->getRecords()::getisEof();
+        return $this->getRecords()->getIsEof();
     }
 
     /**
-     * Cardinalidade Um para Muitos
+     * Cardinalidade Muitos para um
      *
      * @param object $model
      * @param string $fieldDestine
      * @param string $fieldOrigen
      * @return void
      */
-    public function oneForMany(object $model, string $fieldDestine, string $fieldOrigen = null)
+    public function manyForOne(object $model, string $fieldDestine, string $fieldOrigen = null)
     {
         if(!isset($model) && empty($model)){
             return null;
@@ -192,22 +192,29 @@ class model extends utils implements modelInterface
 
         $resource = new resource();
 
-        $sql = sprintf("SELECT
+        $sql = sprintf("SELECT DISTINCT
                 %3\$s.*
-            FROM %1\$s
-            JOIN %3\$s ON %3\$s.%4\$s = %1\$s.%2\$s
+            FROM %3\$s
+            JOIN %1\$s ON %1\$s.%2\$s = %3\$s.%4\$s AND %1\$s.active = 1
             WHERE
                 %1\$s.%2\$s = %5\$s
+                AND %3\$s.active = 1
+            -- GROUP BY
+            --     %3\$s.%4\$s
             ORDER BY
-                %1\$s.%2\$s;",
+                %3\$s.%4\$s;",
             $this->getTable(),
             $fieldOrigem,
             $model->getTable(),
             $fieldDestine,
-            $this->getField($fieldOrigem)
+            $this->prepareValueByVisibleColumns(
+                $this->visibleColumns()['columns'][$fieldOrigem]['type'],
+                $this->getField($fieldOrigem)
+            )
         );
 
-        if(!$resource::query($sql)){
+        if(!$resource->query($sql)){
+            $this->setError($resource->getError());
             return null;
         }
 
@@ -250,7 +257,7 @@ class model extends utils implements modelInterface
             $fieldDestine,
         );
 
-        if(!$resource::query($sql)){
+        if(!$resource->query($sql)){
             return null;
         }
 
@@ -276,7 +283,7 @@ class model extends utils implements modelInterface
 
         // array do conteúdo
         $content = $this->arrayByVisibleColumns($this->visibleColumns(), $data);
-        if(!$this->getRecords()::populate($content)){
+        if(!$this->getRecords()->populate($content)){
             $this->setError('Erro na população do objeto Data.');
             return false;
         }
@@ -303,8 +310,8 @@ class model extends utils implements modelInterface
             return false;
         }
 
-        if(!$resource::query($sql)){
-            $this->setError($resource::getError());
+        if(!$resource->query($sql)){
+            $this->setError($resource->getError());
             return false;
         }
 
@@ -321,7 +328,7 @@ class model extends utils implements modelInterface
             return null;
         }
 
-        return $this->getRecords()::total();
+        return $this->getRecords()->total();
     }
 
     /**
@@ -334,7 +341,7 @@ class model extends utils implements modelInterface
         if(empty($this->getRecords())){
             return null;
         }
-        return $this->getRecords()::asArray();
+        return $this->getRecords()->asArray();
     }
 
     /**
@@ -347,7 +354,7 @@ class model extends utils implements modelInterface
             return null;
         }
 
-        return $this->getRecords()::query($sql);
+        return $this->getRecords()->query($sql);
     }
 
     /**
@@ -369,8 +376,8 @@ class model extends utils implements modelInterface
             return false;
         }
 
-        if(!$resource::query($sql)){
-            $this->setError($resource::getError());
+        if(!$resource->query($sql)){
+            $this->setError($resource->getError());
             return false;
         }
 
@@ -386,10 +393,10 @@ class model extends utils implements modelInterface
     {
         $this->records = new resource();
         if(isset($sql)){
-            $this->records::query($sql);
+            $this->records->query($sql);
             return true;
         }
-        $this->records::query("SELECT * FROM ".$this->getTable().";");
+        $this->records->query("SELECT * FROM ".$this->getTable().";");
         return true;
     }
 
@@ -399,15 +406,15 @@ class model extends utils implements modelInterface
      * @param array $search
      * @return void
      */
-    public function seek(array $search)
+    public function seek(array $search, string $sql = null)
     {
         if(empty($this->getTable())){
             return null;
         }
 
         $this->setRecords(new resource());
-        if(!$this->getRecords()::seek($this->getTable(), $search)){
-            $this->setError($this->getRecords()::getError());
+        if(!$this->getRecords()->seek($this->getTable(), $search, $sql)){
+            $this->setError($this->getRecords()->getError());
             return null;
         }
 
@@ -425,10 +432,21 @@ class model extends utils implements modelInterface
         if(empty($this->getTable())){
             return null;
         }
+        if(!isset($search) || empty($search())){
+            return null;
+        }
+
+        $content = $this->filterByVisibleColumns($this->visibleColumns(), $search);
+        array_walk ($content, function(&$item, $key){
+            $item = $key.' = '.$item;
+        });
 
         $this->setRecords(new resource());
-        if(!$this->getRecords()::search($this->getTable(), $search)){
-            $this->setError($this->getRecords()::getError());
+        if(!$this->getRecords()->search(
+            $this->getTable(),
+            implode(' AND ', $content)
+        )){
+            $this->setError($this->getRecords()->getError());
             return null;
         }
 
@@ -440,7 +458,7 @@ class model extends utils implements modelInterface
         if(empty($this->getRecords())){
             return null;
         }
-        return $this->getRecords()::getNew();
+        return $this->getRecords()->getNew();
     }
 
     /**
