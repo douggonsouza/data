@@ -176,65 +176,20 @@ class resource implements resourceInterface
      * @param array  $search
      * @return bool
      */
-    public function seek(string $table, array $search = null, string $sql = null)
+    public function seek(string $sql)
     {
-        if(!isset($table) || empty($table)){
-            $this->setError('Não é permitido table nulo.');
+        if(!isset($sql) || empty($sql)){
+            $this->setError('Não é permitido Sql nulo.');
             return false;
         }
 
-        $where = null;
-        if(isset($search) && !empty($search)){
-            $where = ' WHERE '.implode(' AND ', $search);
-        }
-
-        $query = sprintf(
-            "SELECT * FROM %1\$s%2\$s;",
-            $table,
-            $where
-        );
-        if(isset($sql)){
-            $query = $sql;
-        }
-
-        if(!$this->query($query)){
+        if(!$this->query($sql)){
             $this->setError(self::getConn()->error);
             return false;
         }
 
         return true;
     }
-
-    /**
-     * Executa uma instrução MySQL
-     * 
-     */
-    // public function dicionary(string $sql)
-    // {
-    //     if(!isset($sql) || empty($sql)){
-    //         return false;
-    //     }
-
-    //     self::conn();
-    //     if(!self::getConn()){
-    //         return false;
-    //     }
-        
-    //     try{
-    //         self::getConn()->query('SET SQL_SAFE_UPDATES = 0;');
-    //         $this->setResource(self::getConn()->query((string) $sql));
-    //         if(empty($this->getResource())){
-    //             $this->setError(self::getConn()->error);
-    //             return false;
-    //         }
-    //         self::getConn()->query('SET SQL_SAFE_UPDATES = 1;');
-            
-    //         return $this->asArray();
-    //     }
-    //     catch(\Exception $e){
-    //         return false;
-    //     }
-    // }
 
     /**
      * Atualiza a propriedade data

@@ -406,14 +406,14 @@ class model extends utils implements modelInterface
      * @param array $search
      * @return void
      */
-    public function seek(array $search, string $sql = null)
+    public function seek()
     {
-        if(empty($this->getTable())){
+        if(empty($this->getSeek())){
             return null;
         }
 
         $this->setRecords(new resource());
-        if(!$this->getRecords()->seek($this->getTable(), $search, $sql)){
+        if(!$this->getRecords()->seek($this->getSeek())){
             $this->setError($this->getRecords()->getError());
             return null;
         }
@@ -459,6 +459,23 @@ class model extends utils implements modelInterface
             return null;
         }
         return $this->getRecords()->getNew();
+    }
+
+    /**
+     * Devolve sql para a realização da busca
+     *
+     * @return void
+     */
+    public function getSeek()
+    {
+        if(empty($this->visibleColumns()['table'])){
+            return null;
+        }
+
+        return sprintf(
+            'SELECT * FROM %1$s WHERE %1$s.active = 1;',
+            $this->visibleColumns()['table']
+        );
     }
 
     /**
