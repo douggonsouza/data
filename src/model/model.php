@@ -57,7 +57,7 @@ class model extends utils implements modelInterface
 
         $resource = new resource();
         $dicionary = $resource->execute($this->getDicionary());
-        if(!$dicionary){
+        if(!isset($dicionary)){
             $this->setError($resource->getError());
             return null;
         }
@@ -162,7 +162,7 @@ class model extends utils implements modelInterface
     public function isEof()
     {
         if(empty($this->getRecords())){
-            return false;
+            return true;
         }
 
         return $this->getRecords()->getIsEof();
@@ -406,14 +406,14 @@ class model extends utils implements modelInterface
      * @param array $search
      * @return void
      */
-    public function seek()
+    public function seek(string $search = null)
     {
         if(empty($this->getSeek())){
             return null;
         }
 
         $this->setRecords(new resource());
-        if(!$this->getRecords()->seek($this->getSeek())){
+        if(!$this->getRecords()->seek($this->getSeek($search))){
             $this->setError($this->getRecords()->getError());
             return null;
         }
@@ -464,17 +464,23 @@ class model extends utils implements modelInterface
     /**
      * Devolve sql para a realização da busca
      *
-     * @return void
+     * @param string $where
+     * @return string
      */
-    public function getSeek()
+    public function getSeek(string $where = null)
     {
         if(empty($this->visibleColumns()['table'])){
             return null;
         }
 
+        if(!isset($where)){
+            $where = $this->visibleColumns()['table'].'.active = 1';
+        }
+
         return sprintf(
-            'SELECT * FROM %1$s WHERE %1$s.active = 1;',
-            $this->visibleColumns()['table']
+            'SELECT * FROM %1$s WHERE %2$s;',
+            $this->visibleColumns()['table'],
+            $where
         );
     }
 

@@ -12,7 +12,7 @@ class resource implements resourceInterface
     protected $resource;
     protected $error;
     protected $index = -1;
-    protected $isEof = false;
+    protected $isEof = true;
     protected $new   = true;
 
     /**
@@ -202,7 +202,11 @@ class resource implements resourceInterface
             return true;
         }
 
-        $this->setData($this->getResource()->fetch_assoc());
+        $data = $this->getResource()->fetch_assoc();
+        if(isset($data) && !empty($data)){
+            $this->setData($data);
+            $this->setIndex($this->getIndex() + 1);
+        }
         return true;
     }
 
@@ -216,8 +220,11 @@ class resource implements resourceInterface
             return true;
         }
 
-        $this->setIndex($this->getIndex() + 1);
-        $this->setData($this->getResource()->fetch_assoc());
+        $data = $this->getResource()->fetch_assoc();
+        if(isset($data) && !empty($data)){
+            $this->setData($data);
+            $this->setIndex($this->getIndex() + 1);
+        }
         return true;
     }
 
