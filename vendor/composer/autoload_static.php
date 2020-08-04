@@ -27,6 +27,7 @@ class ComposerStaticInit5b5e257a38c3975347b6d4684547b97b
         'data\\model\\utils' => __DIR__ . '/../..' . '/src/model/utils.php',
         'data\\resource\\resource' => __DIR__ . '/../..' . '/src/resource/resource.php',
         'data\\resource\\resourceInterface' => __DIR__ . '/../..' . '/src/resource/resourceInterface.php',
+        'data\\typing' => __DIR__ . '/../..' . '/src/typing.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

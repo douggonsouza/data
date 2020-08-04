@@ -12,4 +12,5 @@ return array(
     'data\\model\\utils' => $baseDir . '/src/model/utils.php',
     'data\\resource\\resource' => $baseDir . '/src/resource/resource.php',
     'data\\resource\\resourceInterface' => $baseDir . '/src/resource/resourceInterface.php',
+    'data\\typing' => $baseDir . '/src/typing.php',
 );

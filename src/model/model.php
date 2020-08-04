@@ -351,7 +351,7 @@ class model extends utils implements modelInterface
     public function query(string $sql)
     {
         if(empty($this->getRecords())){
-            return null;
+            $this->setRecords(new resource());
         }
 
         return $this->getRecords()->query($sql);
