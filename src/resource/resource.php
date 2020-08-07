@@ -221,10 +221,12 @@ class resource implements resourceInterface
         }
 
         $data = $this->getResource()->fetch_assoc();
-        if(isset($data) && !empty($data)){
-            $this->setData($data);
-            $this->setIndex($this->getIndex() + 1);
+        if(!isset($data) || empty($data)){
+            $this->setIsEof(true);
+            return true;
         }
+        $this->setData($data);
+        $this->setIndex($this->getIndex() + 1);
         return true;
     }
 
@@ -239,6 +241,7 @@ class resource implements resourceInterface
         }
 
         $this->setIndex($this->getIndex() - 1);
+        $this->getResource()->data_seek($this->getIndex());
         $this->data();
 
         return true;
@@ -255,6 +258,7 @@ class resource implements resourceInterface
         }
 
         $this->setIndex(0);
+        $this->getResource()->data_seek($this->getIndex());
         $this->data();
 
         return true;
@@ -271,6 +275,7 @@ class resource implements resourceInterface
         }
 
         $this->setIndex($this->total() - 1);
+        $this->getResource()->data_seek($this->getIndex());
         $this->data();
 
         return true;
@@ -440,7 +445,6 @@ class resource implements resourceInterface
 
         if(isset($index) && $index <= $this->total()){
             $this->index = $index;
-            $this->getResource()->data_seek($this->getIndex());
         }
     }
 
@@ -459,7 +463,7 @@ class resource implements resourceInterface
      */ 
     public function setIsEof($isEof)
     {
-        if(isset($isEof) && !empty($isEof)){
+        if(isset($isEof)){
             $this->isEof = $isEof;
         }
     }

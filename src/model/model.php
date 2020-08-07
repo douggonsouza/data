@@ -322,7 +322,7 @@ class model extends utils implements modelInterface
      * Expõe o total de linha afetadas pela query
      * @return int
     */
-    protected function total()
+    public function total()
     {
         if(empty($this->getRecords())){
             return null;
@@ -385,6 +385,19 @@ class model extends utils implements modelInterface
     }
 
     /**
+     * Executa uma instrução MySQL
+     * 
+     */
+    public function execute(string $sql)
+    {
+        if(empty($this->getRecords())){
+            $this->setRecords(new resource());
+        }
+
+        return $this->getRecords()->execute($sql);
+    }
+
+    /**
      * Carrega a propriedade records com um resource
      *
      * @return void
@@ -406,14 +419,10 @@ class model extends utils implements modelInterface
      * @param array $search
      * @return void
      */
-    public function seek(string $search = null)
+    public function seek(array $search = null)
     {
-        if(empty($this->getSeek())){
-            return null;
-        }
-
         $this->setRecords(new resource());
-        if(!$this->getRecords()->seek($this->getSeek($search))){
+        if(!$this->getRecords()->seek($this->sqlSeek($search))){
             $this->setError($this->getRecords()->getError());
             return null;
         }
@@ -432,7 +441,7 @@ class model extends utils implements modelInterface
         if(empty($this->getTable())){
             return null;
         }
-        if(!isset($search) || empty($search())){
+        if(!isset($search) || empty($search)){
             return null;
         }
 
@@ -444,7 +453,7 @@ class model extends utils implements modelInterface
         $this->setRecords(new resource());
         if(!$this->getRecords()->search(
             $this->getTable(),
-            implode(' AND ', $content)
+            $content
         )){
             $this->setError($this->getRecords()->getError());
             return null;
@@ -464,23 +473,23 @@ class model extends utils implements modelInterface
     /**
      * Devolve sql para a realização da busca
      *
-     * @param string $where
+     * @param array $where
      * @return string
      */
-    public function getSeek(string $where = null)
+    public function sqlSeek(array $where = null)
     {
         if(empty($this->visibleColumns()['table'])){
             return null;
         }
 
         if(!isset($where)){
-            $where = $this->visibleColumns()['table'].'.active = 1';
+            $where = array( $this->visibleColumns()['table'].'.active = 1');
         }
 
         return sprintf(
             'SELECT * FROM %1$s WHERE %2$s;',
             $this->visibleColumns()['table'],
-            $where
+            implode(' AND ', $where)
         );
     }
 

@@ -45,7 +45,25 @@ abstract class conn
 	 */ 
 	static public function getConnection()
 	{
-		return self::connection();
+		if(!isset(self::$connection)){
+			if(!isset($_ENV["DBHOST"]) || !isset($_ENV["DBLOGIN"]) || !isset($_ENV["DBPASSWORD"]) || !isset($_ENV["DBSCHEMA"])){
+				self::setError("Não existem dados de conexão");
+				return null;
+			}
+
+			self::connection(
+                $_ENV["DBHOST"],
+                $_ENV["DBLOGIN"],
+                $_ENV["DBPASSWORD"],
+                $_ENV["DBSCHEMA"],
+            );
+            if(!isset(self::$connection)){
+                self::setError(self::getConn()->error);
+                return null;
+            }
+		}
+
+		return self::$connection;
 	}
 
     /**
@@ -53,8 +71,9 @@ abstract class conn
      * 
      * @return boolean
      */
-    public function beginTransaction()
+    static public function beginTransaction()
     {
+
 		// inicia sessão de transação
 		mysqli_query(self::getConnection(), 'SET SQL_SAFE_UPDATES = 0;');
         self::setTransaction(mysqli_query (self::getConnection(), 'START TRANSACTION'));
@@ -67,7 +86,7 @@ abstract class conn
      * Faz commit na transação iniciada
      * @return boolean
      */
-    final public function commitTransaction()
+    static public function commitTransaction()
     {
 		// confirma sessão de transação
 		mysqli_query(self::getConnection(), 'SET SQL_SAFE_UPDATES = 0;');
@@ -81,7 +100,7 @@ abstract class conn
      * Faz rollback na transação iniciada
      * @return boolean
      */
-    final public function rollbackTransaction()
+    static public function rollbackTransaction()
     {
 		// desfaz sessão de transação
 		mysqli_query(self::getConnection(), 'SET SQL_SAFE_UPDATES = 0;');
