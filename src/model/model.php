@@ -13,11 +13,13 @@ class model extends utils implements modelInterface
     public    $dicionary = null;
     protected $records;
     protected $error;
+    protected $model = false;
 
     public function __construct(string $table, string $key)
     {
         $this->setTable($table);
         $this->setKey($key);
+        $this->setModel(true);
     }
 
     /**
@@ -207,8 +209,8 @@ class model extends utils implements modelInterface
             $fieldOrigem,
             $model->getTable(),
             $fieldDestine,
-            $this->prepareValueByVisibleColumns(
-                $this->visibleColumns()['columns'][$fieldOrigem]['type'],
+            $this->prepareValueByColumns(
+                $this->type($this->infoColumns($this->getTable(),$fieldOrigem)['Type']),
                 $this->getField($fieldOrigem)
             )
         );
@@ -272,8 +274,8 @@ class model extends utils implements modelInterface
      */
     public function populate(array $data)
     {
-        if(empty($this->visibleColumns())){
-            $this->setError('Não existe configuração para colunas visíveis.');
+        if(empty($this->getTable())){
+            $this->setError('Falta a definição da tabela.');
             return false;
         }
 
@@ -282,13 +284,43 @@ class model extends utils implements modelInterface
         }
 
         // array do conteúdo
-        $content = $this->arrayByVisibleColumns($this->visibleColumns(), $data);
+        $content = $this->dataByColumns($this->infoColumns($this->getTable()), $data);
         if(!$this->getRecords()->populate($content)){
             $this->setError('Erro na população do objeto Data.');
             return false;
         }
 
-        return true;
+        return $this;
+    }
+
+    /**
+     * Levanta as informações das columas para a tabela
+     *
+     * @param string $table
+     * @return array
+     */
+    protected function infoColumns(string $table, $field = null)
+    {
+        if(!isset($table) || empty($table)){
+            return null;
+        }
+
+        if(isset($field)){
+            return $this->execute(
+                sprintf(
+                    "SHOW COLUMNS FROM %s WHERE Field='%s'",
+                    $table,
+                    $field
+                )
+            );
+        }
+
+        return $this->execute(
+            sprintf(
+                'SHOW COLUMNS FROM %s',
+                $table
+            )
+        );
     }
 
     /**
@@ -304,7 +336,7 @@ class model extends utils implements modelInterface
 
         $resource = new resource();
 
-        $sql = $this->queryForSave($this->visibleColumns(), $this->getData());
+        $sql = $this->queryForSave($this->getData());
         if(empty($sql)){
             $this->setError('Erro na geração da query de salvamento.');
             return false;
@@ -370,7 +402,7 @@ class model extends utils implements modelInterface
 
         $resource = new resource();
 
-        $sql = $this->queryForDelete($this->visibleColumns(), $this->getData());
+        $sql = $this->queryForDelete($this->getData());
         if(empty($sql)){
             $this->setError('Erro na geração da query de deleção.');
             return false;
@@ -441,11 +473,12 @@ class model extends utils implements modelInterface
         if(empty($this->getTable())){
             return null;
         }
+
         if(!isset($search) || empty($search)){
             return null;
         }
 
-        $content = $this->filterByVisibleColumns($this->visibleColumns(), $search);
+        $content = $this->filterByColumns($search);
         array_walk ($content, function(&$item, $key){
             $item = $key.' = '.$item;
         });
@@ -458,6 +491,8 @@ class model extends utils implements modelInterface
             $this->setError($this->getRecords()->getError());
             return null;
         }
+
+        $this->setModel(true);
 
         return $this;
     }
@@ -478,19 +513,181 @@ class model extends utils implements modelInterface
      */
     public function sqlSeek(array $where = null)
     {
-        if(empty($this->visibleColumns()['table'])){
+        if(empty($this->getTable())){
             return null;
         }
 
         if(!isset($where)){
-            $where = array( $this->visibleColumns()['table'].'.active = 1');
+            $where = array( $this->getTable().'.active = 1');
         }
 
         return sprintf(
             'SELECT * FROM %1$s WHERE %2$s;',
-            $this->visibleColumns()['table'],
+            $this->getTable(),
             implode(' AND ', $where)
         );
+    }
+
+    /**
+     * Cria query de Save
+     *
+     * @param array $infoColumns
+     * @param array $data
+     * @return string
+     */
+    public function queryForSave(array $data)
+    {
+        if(!isset($data) || empty($data)){
+            $this->setError('Não é permitido parâmetro data nulo.');
+            return false;
+        }
+
+        $infoColumns = $this->infoColumns($this->getTable());
+        if(!isset($infoColumns) || empty($infoColumns)){
+            $this->setError('Não é permitido parâmetro infoColumns nulo.');
+            return false;
+        }
+
+        $where = null;
+
+        // array do conteúdo
+
+        $content = array();
+        foreach($infoColumns as $item){
+            if($item['Key'] == 'PRI'){
+                if(isset($data[$item['Field']])){
+                    $where = $item['Field'].' = '.$this->prepareValueByColumns(
+                        $this->type($item['Type']),
+                        $data[$item['Field']]
+                    );
+                }
+                continue;
+            }
+            if(isset($where)){
+                $content[$item['Field']] = $item['Field'].' = '.$this->prepareValueByColumns(
+                    $this->type($item['Type']),
+                    $data[$item['Field']]
+                ).'';
+                continue;
+            }
+            $content[$item['Field']] = $this->prepareValueByColumns(
+                $this->type($item['Type']),
+                $data[$item['Field']]
+            );
+        }
+
+        // update
+        if(isset($where)){
+            $sql = sprintf(
+                "UPDATE %1\$s SET %2\$s WHERE %3\$s;",
+                $infoColumns['table'],
+                implode(', ',$content),
+                $where
+            );
+            return $sql;
+        }
+        // save
+        $sql = sprintf(
+            "INSERT INTO %1\$s (%2\$s) VALUES (%3\$s);",
+            $infoColumns['table'],
+            implode(', ', array_keys($content)),
+            implode(', ',$content),
+        );
+        return $sql;
+    }
+
+    /**
+     * Cria query de Save
+     *
+     * @param array $data
+     * @return string
+     */
+    public function queryForDelete(array $data)
+    {
+        if(!isset($data) || empty($data)){
+            $this->setError('Nâo é permitido parâmetro data nulo.');
+            return false;
+        }
+
+        $infoColumns = $this->infoColumns($this->getTable());
+        if(!isset($infoColumns) || empty($infoColumns)){
+            $this->setError('Não é permitido parâmetro infoColumns nulo.');
+            return false;
+        }
+
+        // existe id
+        $where = null;
+        $infoKey = $this->infoColumns($this->getTable(),$this->getKey());
+        if(isset($data[$infoKey['Field']])){
+            $where = $infoKey['Field'].' = '.$this->prepareValueByColumns(
+                $this->type($infoKey['Type']),
+                $data[$infoKey['Field']]
+            );
+        }
+        if(!isset($where)){
+            $this->setError('Não é possível deletar um novo resource.');
+            return false;
+        }
+
+        // update
+        $sql = sprintf(
+            "DELETE FROM %1\$s WHERE %2\$s;",
+            $this->getTable(),
+            $where
+        );
+        return $sql;
+    }
+
+    protected function dataByColumns(array $infoColumns, array $data)
+    {
+        $content = array();
+
+        if(!isset($infoColumns) || empty($infoColumns) || !isset($data) || empty($data)){
+            return $content;
+        }
+
+        // array do conteúdo
+        foreach($infoColumns as $item){
+            if(isset($data[$item['Field']])){
+                $content[$item['Field']] = trim($data[$item['Field']]);
+            }
+        }
+
+        return $content;
+    }
+
+    protected function filterByColumns(array $data)
+    {
+        $content = array();
+        $infoColumns = $this->infoColumns($this->getTable());
+        if(!isset($infoColumns) || empty($infoColumns) || !isset($data) || empty($data)){
+            return $content;
+        }
+
+        // array do conteúdo
+        foreach($infoColumns as $item){
+            if(isset($data[$item['Field']])){
+                $limit = $this->limit($item['Type']);
+                $content[$item['Field']] = trim(
+                    $this->prepareValueByColumns(
+                        $this->type($item['Type']),
+                        $data[$item['Field']]
+                    )
+                );
+            }
+        }
+
+        return $content;
+    }
+
+    /**
+     * é um modelo sim ou não
+     *
+     * @return  self
+     */ 
+    public function isModel()
+    {
+        return $this->model;
     }
 
     /**
@@ -591,6 +788,27 @@ class model extends utils implements modelInterface
     {
         if(isset($error) && !empty($error)){
             $this->error = $error;
+        }
+        return $this;
+    }
+
+    /**
+     * Get the value of model
+     */ 
+    public function getModel()
+    {
+        return $this->model;
+    }
+
+    /**
+     * Set the value of model
+     *
+     * @return  self
+     */ 
+    protected function setModel($model)
+    {
+        if(isset($model)){
+            $this->model = $model;
         }
         return $this;
     }
