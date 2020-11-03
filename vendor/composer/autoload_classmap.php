@@ -13,8 +13,6 @@ return array(
     'data\\resource\\resource' => $baseDir . '/src/resource/resource.php',
     'data\\resource\\resourceInterface' => $baseDir . '/src/resource/resourceInterface.php',
     'data\\typing' => $baseDir . '/src/typing.php',
-    'data\\validade\\limit' => $baseDir . '/src/validade/limit.php',
-    'data\\validade\\validadeInterface' => $baseDir . '/src/validade/validadeInterface.php',
     'data\\validate\\isdatetime' => $baseDir . '/src/validate/isdatetime.php',
     'data\\validate\\isemail' => $baseDir . '/src/validate/isemail.php',
     'data\\validate\\isnumber' => $baseDir . '/src/validate/isnumber.php',

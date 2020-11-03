@@ -188,8 +188,12 @@ class model extends utils implements modelInterface
      * @param string $fieldOrigen
      * @return void
      */
-    public function manyForOne(object $model, string $fieldDestine, string $fieldOrigen = null)
+    public function manyForOne(object $model, string $fieldDestine, $fieldOrigem = null)
     {
+        if(!isset($fieldOrigem)){
+            $fieldOrigem = $fieldDestine;
+        }
+
         if(!isset($model) && empty($model)){
             return null;
         }
@@ -198,12 +202,7 @@ class model extends utils implements modelInterface
             return null;
         }
 
-        if(!isset($fieldOrigem)){
-            $fieldOrigem = $fieldDestine;
-        }
-
         $resource = new resource();
-
         $sql = sprintf("SELECT DISTINCT
                 %3\$s.*
             FROM %3\$s
@@ -220,7 +219,7 @@ class model extends utils implements modelInterface
             $model->getTable(),
             $fieldDestine,
             $this->prepareValueByColumns(
-                $this->type($this->infoColumns($this->getTable(),$fieldOrigem)['Type']),
+                $this->type($this->infoColumns($model->getTable(),$fieldOrigem)[0]['Type']),
                 $this->getField($fieldOrigem)
             )
         );
@@ -241,7 +240,7 @@ class model extends utils implements modelInterface
      * @param string $fieldOrigen
      * @return void
      */
-    public function manyForMany(object $model, string $fieldDestine, string $fieldOrigen = null)
+    public function manyForMany(object $model, string $fieldDestine, string $fieldOrigem = null)
     {
         if(!isset($model) && empty($model)){
             return null;
@@ -256,7 +255,6 @@ class model extends utils implements modelInterface
         }
 
         $resource = new resource();
-
         $sql = sprintf("SELECT
                 %3\$s.*
             FROM %1\$s

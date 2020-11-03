@@ -16,7 +16,7 @@ class isdatetime implements validadeInterface
     
     public function validate($value)
     {
-        $data = DateTime::createFromFormat($this->getFormat(), $value);
+        $data = \DateTime::createFromFormat($this->getFormat(), $value);
         if(!$data || $data->format($this->getFormat()) !== $value){
             $this->setError('Não é um e-mail válido.');
         }
