@@ -15,4 +15,11 @@ return array(
     'data\\typing' => $baseDir . '/src/typing.php',
     'data\\validade\\limit' => $baseDir . '/src/validade/limit.php',
     'data\\validade\\validadeInterface' => $baseDir . '/src/validade/validadeInterface.php',
+    'data\\validate\\isdatetime' => $baseDir . '/src/validate/isdatetime.php',
+    'data\\validate\\isemail' => $baseDir . '/src/validate/isemail.php',
+    'data\\validate\\isnumber' => $baseDir . '/src/validate/isnumber.php',
+    'data\\validate\\isstring' => $baseDir . '/src/validate/isstring.php',
+    'data\\validate\\limit' => $baseDir . '/src/validate/limit.php',
+    'data\\validate\\notnull' => $baseDir . '/src/validate/notnull.php',
+    'data\\validate\\validadeInterface' => $baseDir . '/src/validate/validadeInterface.php',
 );

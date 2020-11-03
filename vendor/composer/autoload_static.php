@@ -30,6 +30,13 @@ class ComposerStaticInit5b5e257a38c3975347b6d4684547b97b
         'data\\typing' => __DIR__ . '/../..' . '/src/typing.php',
         'data\\validade\\limit' => __DIR__ . '/../..' . '/src/validade/limit.php',
         'data\\validade\\validadeInterface' => __DIR__ . '/../..' . '/src/validade/validadeInterface.php',
+        'data\\validate\\isdatetime' => __DIR__ . '/../..' . '/src/validate/isdatetime.php',
+        'data\\validate\\isemail' => __DIR__ . '/../..' . '/src/validate/isemail.php',
+        'data\\validate\\isnumber' => __DIR__ . '/../..' . '/src/validate/isnumber.php',
+        'data\\validate\\isstring' => __DIR__ . '/../..' . '/src/validate/isstring.php',
+        'data\\validate\\limit' => __DIR__ . '/../..' . '/src/validate/limit.php',
+        'data\\validate\\notnull' => __DIR__ . '/../..' . '/src/validate/notnull.php',
+        'data\\validate\\validadeInterface' => __DIR__ . '/../..' . '/src/validate/validadeInterface.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

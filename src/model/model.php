@@ -45,6 +45,16 @@ class model extends utils implements modelInterface
     }
 
     /**
+     * Arvore de validações por coluna
+     *
+     * @return array
+     */
+    public function validate()
+    {
+        return array();
+    }
+
+    /**
      * Exporta objeto do tipo dicionary
      * 
      * @param string $dicionarySQL
@@ -336,9 +346,15 @@ class model extends utils implements modelInterface
 
         $resource = new resource();
 
+        $this->validated($this->getData());
+
         $sql = $this->queryForSave($this->getData());
         if(empty($sql)){
             $this->setError('Erro na geração da query de salvamento.');
+            return false;
+        }
+
+        if(!empty($this->getError())){
             return false;
         }
 
@@ -348,6 +364,33 @@ class model extends utils implements modelInterface
         }
 
         return true;
+    }
+
+    /**
+     * Executa a validação dos campos
+     * 
+     * @param array $data
+     * @return void
+     */
+    protected function validated($data)
+    {
+        if(!isset($data) || empty($data)){
+            $this->setError('Não existem dados a serem salvos.');
+        }
+
+        $validate = $this->validate();
+        if(empty($validate)){
+            return;
+        }
+
+        foreach($data as $index => $item){
+            foreach($validate[$index] as $valid){
+                $valid->validate($item);
+                if(!empty($valid->getError())){
+                    $this->setError($valid->getError());
+                }
+            }
+        }
     }
 
     /**
@@ -787,7 +830,16 @@ class model extends utils implements modelInterface
     public function setError($error)
     {
         if(isset($error) && !empty($error)){
-            $this->error = $error;
+            if(!is_array($this->getError())){
+                $this->error = array();
+            }
+
+            if(is_array($error)){
+                $this->error = array_merge($this->error,$error);
+                return $this;
+            }
+
+            $this->error[] = $error;
         }
         return $this;
     }
