@@ -356,11 +356,26 @@ class model extends utils implements modelInterface
             return false;
         }
 
+        if(!$this->beforeSave()){
+            $this->setError('Erro na validação de pré salvamento.');
+            return false;
+        }
+
         if(!$resource->query($sql)){
             $this->setError($resource->getError());
             return false;
         }
 
+        return true;
+    }
+
+    /**
+     * Realiza validações antes do salvamento
+     *
+     * @return void
+     */
+    protected function beforeSave()
+    {
         return true;
     }
 
@@ -449,11 +464,26 @@ class model extends utils implements modelInterface
             return false;
         }
 
+        if(!$this->beforeDelete()){
+            $this->setError('Erro na validação antes da deleção.');
+            return false;
+        }
+
         if(!$resource->query($sql)){
             $this->setError($resource->getError());
             return false;
         }
 
+        return true;
+    }
+
+    /**
+     * Validação antes da deleção
+     *
+     * @return void
+     */
+    protected function beforeDelete()
+    {
         return true;
     }
 
